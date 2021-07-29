@@ -2,12 +2,20 @@
 # To add a new markdown cell, type '# %% [markdown]'
 # %%
 # Dependencies
+from typing import Optional, Any, List, Union, TypeVar, Type, cast, Callable
+from uuid import UUID
+
 import requests
 import json
-import config
 from random_word import RandomWords
 import pandas as pd
+from sqlalchemy import create_engine, Column, Integer, String, Boolean
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import Session
 
+import config
+
+Base = declarative_base()
 
 # To use this code, make sure you
 #
@@ -17,8 +25,6 @@ import pandas as pd
 #
 #     result = welcome_from_dict(json.loads(json_string))
 
-from typing import Optional, Any, List, Union, TypeVar, Type, cast, Callable
-from uuid import UUID
 
 
 T = TypeVar("T")
@@ -313,72 +319,54 @@ def welcome_to_dict(x: List[WelcomeElement]) -> Any:
 
 
 #======================
-
 words = set()
 words_df = pd.DataFrame(columns=['Word','Definition', 'Etymology', 'Part_of_Speech', 'Date', 'Syllables', 'Phonetic', 'Offensive'])
-words_df
+
 
 
 # %%
-word = RandomWords()
-
-# Return a single random word
-word.get_random_word()
-
-while len(words) < 500:
-    words.add(word.get_random_word())
+wordGenerator = RandomWords()
 
 
+class WordObj(Base):
+    __tablename__ = 'word_list'
+    Word = Column(String(50), primary_key=True)
+    Date = Column(String(50))
+    Definition = Column(String(150))
+    Part_of_Speech = Column(String(50))
+    Etymology = Column(String(50))
+    Syllables = Column(String(50))
+    Phonetic = Column(String(50))
+    Offensive = Column(Boolean)
+    
+    def __init__(self, word, date, definition, pos, ety, syl, pho, offensive):
+        self.Word = word
+        self.date = date
+        self.Part_of_Speech
+        self.Definition = definition
+        self.Etymology = ety
+        self.Syllables = syl
+        self.Phonetic = pho
+        self.Offensive = offensive
+        
 
 
 # %%
 # URL for GET requests to retrieve vehicle datawor
-url = "https://www.dictionaryapi.com/api/v3/references"
+
 
 def dictionary(test_word):
+    url = "https://www.dictionaryapi.com/api/v3/references"
     return (f'{url}/collegiate/json/{test_word}?key={config.API_KEY_Dictionary}')
 
 
 
-
-
 # %%
 # Pretty print JSON for all launchpads
-
-
-
-# for word in list(words):
-#     print(word)
-#     word_url = dictionary('Banana')
-#     print(word_url)
-#     response = requests.get(word_url).json()
-#     print(json.dumps(response, indent=4, sort_keys=True))
-
-
-# %%
-#short_def = response[0]['shortdef']
-#print(short_def)
-#word_id = response[0]['meta']['id']
-#print(word_id)
-#ety = response[0]['et'][0][1]
-#print(ety)
-#pos = response[0]['fl']
-#print(pos)
-#date = response[0]['date']
-#print(date)
-#syl = response[0]['hwi']['hw']
-#print(syl)
-#phn = response[0]['hwi']['prs'][0]['mw']
-#print(phn)
-#offensive = response[0]['meta']['offensive']
-#print(offensive)
-
-
-# %%
-# Pretty print JSON for all launchpads
-
-for word in list(words):
-    print(word)
+def lookupWord(word):
+        
+    result = None
+    
     word_url = dictionary(word)
         #print(word_url)
     response = requests.get(word_url).text
@@ -387,11 +375,10 @@ for word in list(words):
         newWordObj = welcome_from_dict(json.loads(response))
     except:
         print("the json failed")
-        continue
+        return result
     
     
     try:
-                
         short_def = newWordObj[0].shortdef[0]
     except:
         short_def = "no definition"
@@ -399,6 +386,7 @@ for word in list(words):
         word_id = newWordObj[0].meta.id
     except:
         word_id = ""
+        return result
         
         
     try: 
@@ -426,36 +414,72 @@ for word in list(words):
     except:
         offensive = False
 
-    words_df = words_df.append({'Word': word_id,'Definition': short_def, 'Etymology': ety, 'Part_of_Speech': pos, 'Date': date, 'Syllables': syl, 'Phonetic': phn , 'Offensive': offensive}, ignore_index=True)
-#    except: 
-#        print('word was skipped')
-        
-#     except(error):
-#         print(f'{word} was skipped. Missing data.')
-#         print(error)
-    print(f'{word_id}: {short_def}' )
+    newWord = WordObj(word_id, date, short_def, pos, ety, syl, phn, offensive)
 
-# %%
-print(words_df.head())
+    return newWord
 
 
+def getDatabase():
+    connection_String = "postgres:drwho@localhost:5432/words"
+    engine = create_engine(f'postgresql://{connection_String}')
+    session = Session(engine)
+    allwords =   session.query(WordObj).all()
+    session.close()    
+    
+    word_df = pd.DataFrame(allwords)
+    
+    
 
-# %%
-
-
-
-# %%
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
-Base = declarative_base()
-
-
-def loadDatabase(df):
+def saveDatabase(df):
     connection_String = "postgres:drwho@localhost:5432/words"
     engine = create_engine(f'postgresql://{connection_String}')
     print(engine.table_names())
     
-    df.to_sql(name="word_list", con=engine, if_exists="replace", index=False)
+    df.to_sql(name="word_list", con=engine, if_exists="append", index=False)
+    
+    
+
+def initalizeDB():
+    words = []
+    while len(words) < 500:
+        words.add(wordGenerator.get_random_word())
+    for word in words:
+        wordObj = lookupWord(word)
+        words_df = words_df.append({
+            'Word': wordObj.Word,
+            'Definition': wordObj.Definition, 
+            'Etymology': wordObj.Etymology, 
+            'Part_of_Speech': wordObj.Part_of_Speech, 
+            'Date': wordObj.Date, 
+            'Syllables': wordObj.Syllables, 
+            'Phonetic': wordObj.Phonetic , 
+            'Offensive': wordObj.Offensive}, ignore_index=True)
+
+    saveDatabase(words_df)
 
 
-loadDatabase(words_df)
+def addWordToDB(word):
+    global words_df
+    
+    getDatabase()
+    wordObj = lookupWord(word)
+    
+    if wordObj != None:
+        print(f'Saving word {word}')
+        words_df = words_df.append({
+            'Word': wordObj.Word,
+            'Definition': wordObj.Definition, 
+            'Etymology': wordObj.Etymology, 
+            'Part_of_Speech': wordObj.Part_of_Speech, 
+            'Date': wordObj.Date, 
+            'Syllables': wordObj.Syllables, 
+            'Phonetic': wordObj.Phonetic , 
+            'Offensive': wordObj.Offensive}, ignore_index=True)
+        saveDatabase(words_df)
+    
+    
+        
+        
+        
+    
+    

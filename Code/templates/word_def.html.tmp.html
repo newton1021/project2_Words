@@ -14,6 +14,7 @@
     <link href="{{  url_for('static', filename = 'css/style.css')  }}" rel="stylesheet">
 	<script src="https://d3js.org/d3.v7.min.js"></script>
 	<script type="text/javascript" src="{{  url_for('static', filename = 'js/script.js')  }}"></script>
+
   </head>
   <body>
 
@@ -66,21 +67,22 @@
 			<nav>
 				<ol class="breadcrumb">
 					<li class="breadcrumb-item">
-						<a href="#">Home</a>
-					</li>
-					<li class="breadcrumb-item">
-						<a href="#">Page 1</a>
+						<a href="file:///Volumes/Ditanium%20Crystals/Boot%20Camp/Homework/project2_Words/Code/templates/">Home</a>
 					</li>
 					<li class="breadcrumb-item active">
+						<a href="#">Definition</a>
+					</li>
+					<li class="breadcrumb-item">
 						Data
 					</li>
 				</ol>
 			</nav>
 			<div class="jumbotron">
+				
 				<h1 >
 					WORDS
 				</h1>
-				
+				<div class="row">
 				<div class="col-md-3">
 					<h3 class="h3">By</h3>
 					
@@ -92,16 +94,27 @@
 						<li class="list-group-item-info">Geoffrey Flynn</li>
 					</ul>
 				</div>
-				<h2> Enter New Word </h2>
-				<div class="input-group mb-3">
+				<div class="col-md-2"></div>
+				<div class="col-md-5">
+					<h2 class="h2">{{  word["Word"]  }}</h2>
+					<h3>{{  word["Syllables"]  }}</h3>
+					<p>
+						{{  word["Definition"]  }}
+					</p>
+					
+				</div>
+				</div>
+				<div class="row">
+					<h2> Enter New Word </h2>
+					<div class="input-group mb-3">
 						<input type="text" id="newWord" name="newWord" placeholder="New Word" aria-label="New Word" aria-describedby="basic-addon2"> 
 						<div class="input-group-append">
 							<button  id="btnNewWord" class="btn btn-outline-secondary" onclick=checkWord()> Add </button>
 						</div>
 						
-				</div>
+					</div>
 					
-			
+				</div>
 
 			</div>
 			<p>
@@ -138,10 +151,9 @@
 					</tr>
 					
 					{%  endfor  %}
-
+					
 				</tbody>
-			</table>
-			<div class="row">
+			</table>			<div class="row">
 				<div class="col-md-4">
 				</div>
 				<div class="col-md-4">
