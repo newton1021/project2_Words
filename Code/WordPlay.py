@@ -368,14 +368,15 @@ def lookupWord(word):
     result = None
     
     word_url = dictionary(word)
-        #print(word_url)
+#    print(word_url)
     response = requests.get(word_url).text
-        #print(json.dumps(response, indent=4, sort_keys=True))
-    try: 
-        newWordObj = welcome_from_dict(json.loads(response))
-    except:
-        print("the json failed")
-        return result
+    print(json.loads(response))
+#    try: 
+    newWordObj = welcome_from_dict(json.loads(response))
+#    except:
+    print("the json failed")
+    
+#    return result
     
     
     try:
@@ -383,7 +384,9 @@ def lookupWord(word):
     except:
         short_def = "no definition"
     try: 
-        word_id = newWordObj[0].meta.id
+        temp = newWordObj[0].meta.id
+        temps = temp.split(":")
+        word_id = temps[0]
     except:
         word_id = ""
         return result

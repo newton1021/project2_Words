@@ -34,16 +34,18 @@ Base = declarative_base()
 
 def wordSearch(testWord):
 	session = Session(engine)
-	allwords =   session.query(WordObj).all()
+	allwords =   session.query(WordObj).order_by(WordObj.Word).all()
 	session.close()
 	
-	found = [row for row in allwords if row.Word == testWord]
+	found = [row for row in allwords if row.Word.upper() == testWord.upper()]
 	
 	if len(found) == 0:
 		result = None
+		print("The word was not found")
 		
 	else:
 		result = found[0]
+		print("word was found in the list already")
 	
 	return result
 
@@ -77,15 +79,19 @@ def addWord(newWord):
 	
 	while (count < 2) & (found == None):
 		found = wordSearch(newWord)
-		if found != None:
+		if found == None:
+			print(f'Trying to add {newWord} to the database count - {count}')
 			addWordToDB(newWord)
 			count += 1
 		
 
 	allwords = []
 	session = Session(engine)
-	allwords =   session.query(WordObj).all()
+	allwords =   session.query(WordObj).order_by(WordObj.Word).all()
 	session.close()
+	if found == None:
+		return  render_template("index.html", words = allwords)
+	
 	
 	# need to look up the word see if it is in the current database or else look up from MW
 	return render_template("word_def.html", word = found, words = allwords)
