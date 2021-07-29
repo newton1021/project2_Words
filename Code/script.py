@@ -90,7 +90,7 @@ def addWord(newWord):
 	allwords =   session.query(WordObj).order_by(WordObj.Word).all()
 	session.close()
 	if found == None:
-		return  render_template("index.html", words = allwords)
+		return  render_template("index.html", words = allwords, msg = "Unable to add word")
 	
 	
 	# need to look up the word see if it is in the current database or else look up from MW

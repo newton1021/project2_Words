@@ -2,8 +2,6 @@
 # To add a new markdown cell, type '# %% [markdown]'
 # %%
 # Dependencies
-from typing import Optional, Any, List, Union, TypeVar, Type, cast, Callable
-from uuid import UUID
 
 import requests
 import json
@@ -25,9 +23,13 @@ Base = declarative_base()
 #
 #     result = welcome_from_dict(json.loads(json_string))
 
+from typing import Optional, Any, List, Union, TypeVar, Type, cast, Callable
+from uuid import UUID
+from enum import Enum
 
 
 T = TypeVar("T")
+EnumT = TypeVar("EnumT", bound=Enum)
 
 
 def from_str(x: Any) -> str:
@@ -43,8 +45,10 @@ def from_none(x: Any) -> Any:
 def from_union(fs, x):
     for f in fs:
         try:
+            print(f'PASS: {f}')
             return f(x)
         except:
+            print(f'FAIL: {f}')
             pass
     assert False
     
@@ -67,6 +71,11 @@ def from_list(f: Callable[[Any], T], x: Any) -> List[T]:
 def from_bool(x: Any) -> bool:
     assert isinstance(x, bool)
     return x
+
+
+def to_enum(c: Type[EnumT], x: Any) -> EnumT:
+    assert isinstance(x, c)
+    return x.value
 
 
 class Sound:
@@ -181,39 +190,65 @@ class Meta:
         return result
     
     
-class Uro:
-    ure: Optional[str]
-    fl: Optional[str]
+class Aq:
+    auth: Optional[str]
+    source: Optional[str]
+    aqdate: Optional[str]
     
-    def __init__(self, ure: Optional[str], fl: Optional[str]) -> None:
-        self.ure = ure
-        self.fl = fl
+    def __init__(self, auth: Optional[str], source: Optional[str], aqdate: Optional[str]) -> None:
+        self.auth = auth
+        self.source = source
+        self.aqdate = aqdate
         
     @staticmethod
-    def from_dict(obj: Any) -> 'Uro':
+    def from_dict(obj: Any) -> 'Aq':
         assert isinstance(obj, dict)
-        ure = from_union([from_str, from_none], obj.get("ure"))
-        fl = from_union([from_str, from_none], obj.get("fl"))
-        return Uro(ure, fl)
+        auth = from_union([from_str, from_none], obj.get("auth"))
+        source = from_union([from_str, from_none], obj.get("source"))
+        aqdate = from_union([from_str, from_none], obj.get("aqdate"))
+        return Aq(auth, source, aqdate)
     
     def to_dict(self) -> dict:
         result: dict = {}
-        result["ure"] = from_union([from_str, from_none], self.ure)
-        result["fl"] = from_union([from_str, from_none], self.fl)
+        result["auth"] = from_union([from_str, from_none], self.auth)
+        result["source"] = from_union([from_str, from_none], self.source)
+        result["aqdate"] = from_union([from_str, from_none], self.aqdate)
         return result
     
     
-class DtClass:
+class Quote:
+    t: Optional[str]
+    aq: Optional[Aq]
+    
+    def __init__(self, t: Optional[str], aq: Optional[Aq]) -> None:
+        self.t = t
+        self.aq = aq
+        
+    @staticmethod
+    def from_dict(obj: Any) -> 'Quote':
+        assert isinstance(obj, dict)
+        t = from_union([from_str, from_none], obj.get("t"))
+        aq = from_union([Aq.from_dict, from_none], obj.get("aq"))
+        return Quote(t, aq)
+    
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["t"] = from_union([from_str, from_none], self.t)
+        result["aq"] = from_union([lambda x: to_class(Aq, x), from_none], self.aq)
+        return result
+    
+    
+class UtxtClass:
     t: Optional[str]
     
     def __init__(self, t: Optional[str]) -> None:
         self.t = t
         
     @staticmethod
-    def from_dict(obj: Any) -> 'DtClass':
+    def from_dict(obj: Any) -> 'UtxtClass':
         assert isinstance(obj, dict)
         t = from_union([from_str, from_none], obj.get("t"))
-        return DtClass(t)
+        return UtxtClass(t)
     
     def to_dict(self) -> dict:
         result: dict = {}
@@ -221,43 +256,126 @@ class DtClass:
         return result
     
     
-class SseqClass:
-    dt: Optional[List[List[Union[List[DtClass], str]]]]
+class Uro:
+    ure: Optional[str]
+    prs: Optional[List[PR]]
+    fl: Optional[str]
+    utxt: Optional[List[List[Union[List[UtxtClass], str]]]]
     
-    def __init__(self, dt: Optional[List[List[Union[List[DtClass], str]]]]) -> None:
-        self.dt = dt
+    def __init__(self, ure: Optional[str], prs: Optional[List[PR]], fl: Optional[str], utxt: Optional[List[List[Union[List[UtxtClass], str]]]]) -> None:
+        self.ure = ure
+        self.prs = prs
+        self.fl = fl
+        self.utxt = utxt
         
     @staticmethod
-    def from_dict(obj: Any) -> 'SseqClass':
+    def from_dict(obj: Any) -> 'Uro':
         assert isinstance(obj, dict)
-        dt = from_union([lambda x: from_list(lambda x: from_list(lambda x: from_union([lambda x: from_list(DtClass.from_dict, x), from_str], x), x), x), from_none], obj.get("dt"))
-        return SseqClass(dt)
+        ure = from_union([from_str, from_none], obj.get("ure"))
+        prs = from_union([lambda x: from_list(PR.from_dict, x), from_none], obj.get("prs"))
+        fl = from_union([from_str, from_none], obj.get("fl"))
+        utxt = from_union([lambda x: from_list(lambda x: from_list(lambda x: from_union([lambda x: from_list(UtxtClass.from_dict, x), from_str], x), x), x), from_none], obj.get("utxt"))
+        return Uro(ure, prs, fl, utxt)
     
     def to_dict(self) -> dict:
         result: dict = {}
-        result["dt"] = from_union([lambda x: from_list(lambda x: from_list(lambda x: from_union([lambda x: from_list(lambda x: to_class(DtClass, x), x), from_str], x), x), x), from_none], self.dt)
+        result["ure"] = from_union([from_str, from_none], self.ure)
+        result["prs"] = from_union([lambda x: from_list(lambda x: to_class(PR, x), x), from_none], self.prs)
+        result["fl"] = from_union([from_str, from_none], self.fl)
+        result["utxt"] = from_union([lambda x: from_list(lambda x: from_list(lambda x: from_union([lambda x: from_list(lambda x: to_class(UtxtClass, x), x), from_str], x), x), x), from_none], self.utxt)
+        return result
+    
+    
+class PurpleSseq:
+    sn: Optional[str]
+    dt: Optional[List[List[Union[List[UtxtClass], str]]]]
+    
+    def __init__(self, sn: Optional[str], dt: Optional[List[List[Union[List[UtxtClass], str]]]]) -> None:
+        self.sn = sn
+        self.dt = dt
+        
+    @staticmethod
+    def from_dict(obj: Any) -> 'PurpleSseq':
+        assert isinstance(obj, dict)
+        sn = from_union([from_str, from_none], obj.get("sn"))
+        dt = from_union([lambda x: from_list(lambda x: from_list(lambda x: from_union([lambda x: from_list(UtxtClass.from_dict, x), from_str], x), x), x), from_none], obj.get("dt"))
+        return PurpleSseq(sn, dt)
+    
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["sn"] = from_union([from_str, from_none], self.sn)
+        result["dt"] = from_union([lambda x: from_list(lambda x: from_list(lambda x: from_union([lambda x: from_list(lambda x: to_class(UtxtClass, x), x), from_str], x), x), x), from_none], self.dt)
+        return result
+    
+    
+class SseqEnum(Enum):
+    PSEQ = "pseq"
+    SENSE = "sense"
+    
+    
+class Sdsense:
+    sd: Optional[str]
+    dt: Optional[List[List[str]]]
+    
+    def __init__(self, sd: Optional[str], dt: Optional[List[List[str]]]) -> None:
+        self.sd = sd
+        self.dt = dt
+        
+    @staticmethod
+    def from_dict(obj: Any) -> 'Sdsense':
+        assert isinstance(obj, dict)
+        sd = from_union([from_str, from_none], obj.get("sd"))
+        dt = from_union([lambda x: from_list(lambda x: from_list(from_str, x), x), from_none], obj.get("dt"))
+        return Sdsense(sd, dt)
+    
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["sd"] = from_union([from_str, from_none], self.sd)
+        result["dt"] = from_union([lambda x: from_list(lambda x: from_list(from_str, x), x), from_none], self.dt)
+        return result
+    
+    
+class FluffySseq:
+    sn: Optional[str]
+    dt: Optional[List[List[Union[List[UtxtClass], str]]]]
+    sdsense: Optional[Sdsense]
+    
+    def __init__(self, sn: Optional[str], dt: Optional[List[List[Union[List[UtxtClass], str]]]], sdsense: Optional[Sdsense]) -> None:
+        self.sn = sn
+        self.dt = dt
+        self.sdsense = sdsense
+        
+    @staticmethod
+    def from_dict(obj: Any) -> 'FluffySseq':
+        assert isinstance(obj, dict)
+        sn = from_union([from_str, from_none], obj.get("sn"))
+        dt = from_union([lambda x: from_list(lambda x: from_list(lambda x: from_union([lambda x: from_list(UtxtClass.from_dict, x), from_str], x), x), x), from_none], obj.get("dt"))
+        sdsense = from_union([Sdsense.from_dict, from_none], obj.get("sdsense"))
+        return FluffySseq(sn, dt, sdsense)
+    
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["sn"] = from_union([from_str, from_none], self.sn)
+        result["dt"] = from_union([lambda x: from_list(lambda x: from_list(lambda x: from_union([lambda x: from_list(lambda x: to_class(UtxtClass, x), x), from_str], x), x), x), from_none], self.dt)
+        result["sdsense"] = from_union([lambda x: to_class(Sdsense, x), from_none], self.sdsense)
         return result
     
     
 class Def:
-    sls: Optional[List[str]]
-    sseq: Optional[List[List[List[Union[SseqClass, str]]]]]
+    sseq: Optional[List[List[List[Union[List[List[Union[PurpleSseq, SseqEnum]]], FluffySseq, SseqEnum]]]]]
     
-    def __init__(self, sls: Optional[List[str]], sseq: Optional[List[List[List[Union[SseqClass, str]]]]]) -> None:
-        self.sls = sls
+    def __init__(self, sseq: Optional[List[List[List[Union[List[List[Union[PurpleSseq, SseqEnum]]], FluffySseq, SseqEnum]]]]]) -> None:
         self.sseq = sseq
         
     @staticmethod
     def from_dict(obj: Any) -> 'Def':
         assert isinstance(obj, dict)
-        sls = from_union([lambda x: from_list(from_str, x), from_none], obj.get("sls"))
-        sseq = from_union([lambda x: from_list(lambda x: from_list(lambda x: from_list(lambda x: from_union([SseqClass.from_dict, from_str], x), x), x), x), from_none], obj.get("sseq"))
-        return Def(sls, sseq)
+        sseq = from_union([lambda x: from_list(lambda x: from_list(lambda x: from_list(lambda x: from_union([FluffySseq.from_dict, lambda x: from_list(lambda x: from_list(lambda x: from_union([PurpleSseq.from_dict, SseqEnum], x), x), x), SseqEnum], x), x), x), x), from_none], obj.get("sseq"))
+        return Def(sseq)
     
     def to_dict(self) -> dict:
         result: dict = {}
-        result["sls"] = from_union([lambda x: from_list(from_str, x), from_none], self.sls)
-        result["sseq"] = from_union([lambda x: from_list(lambda x: from_list(lambda x: from_list(lambda x: from_union([lambda x: to_class(SseqClass, x), from_str], x), x), x), x), from_none], self.sseq)
+        result["sseq"] = from_union([lambda x: from_list(lambda x: from_list(lambda x: from_list(lambda x: from_union([lambda x: to_class(FluffySseq, x), lambda x: from_list(lambda x: from_list(lambda x: from_union([lambda x: to_class(PurpleSseq, x), lambda x: to_enum(SseqEnum, x)], x), x), x), lambda x: to_enum(SseqEnum, x)], x), x), x), x), from_none], self.sseq)
         return result
     
     
@@ -267,16 +385,18 @@ class WelcomeElement:
     fl: Optional[str]
     welcome_def: Optional[List[Def]]
     uros: Optional[List[Uro]]
+    quotes: Optional[List[Quote]]
     et: Optional[List[List[str]]]
     date: Optional[str]
     shortdef: Optional[List[str]]
     
-    def __init__(self, meta: Optional[Meta], hwi: Optional[Hwi], fl: Optional[str], welcome_def: Optional[List[Def]], uros: Optional[List[Uro]], et: Optional[List[List[str]]], date: Optional[str], shortdef: Optional[List[str]]) -> None:
+    def __init__(self, meta: Optional[Meta], hwi: Optional[Hwi], fl: Optional[str], welcome_def: Optional[List[Def]], uros: Optional[List[Uro]], quotes: Optional[List[Quote]], et: Optional[List[List[str]]], date: Optional[str], shortdef: Optional[List[str]]) -> None:
         self.meta = meta
         self.hwi = hwi
         self.fl = fl
         self.welcome_def = welcome_def
         self.uros = uros
+        self.quotes = quotes
         self.et = et
         self.date = date
         self.shortdef = shortdef
@@ -289,10 +409,11 @@ class WelcomeElement:
         fl = from_union([from_str, from_none], obj.get("fl"))
         welcome_def = from_union([lambda x: from_list(Def.from_dict, x), from_none], obj.get("def"))
         uros = from_union([lambda x: from_list(Uro.from_dict, x), from_none], obj.get("uros"))
+        quotes = from_union([lambda x: from_list(Quote.from_dict, x), from_none], obj.get("quotes"))
         et = from_union([lambda x: from_list(lambda x: from_list(from_str, x), x), from_none], obj.get("et"))
         date = from_union([from_str, from_none], obj.get("date"))
         shortdef = from_union([lambda x: from_list(from_str, x), from_none], obj.get("shortdef"))
-        return WelcomeElement(meta, hwi, fl, welcome_def, uros, et, date, shortdef)
+        return WelcomeElement(meta, hwi, fl, welcome_def, uros, quotes, et, date, shortdef)
     
     def to_dict(self) -> dict:
         result: dict = {}
@@ -301,6 +422,7 @@ class WelcomeElement:
         result["fl"] = from_union([from_str, from_none], self.fl)
         result["def"] = from_union([lambda x: from_list(lambda x: to_class(Def, x), x), from_none], self.welcome_def)
         result["uros"] = from_union([lambda x: from_list(lambda x: to_class(Uro, x), x), from_none], self.uros)
+        result["quotes"] = from_union([lambda x: from_list(lambda x: to_class(Quote, x), x), from_none], self.quotes)
         result["et"] = from_union([lambda x: from_list(lambda x: from_list(from_str, x), x), from_none], self.et)
         result["date"] = from_union([from_str, from_none], self.date)
         result["shortdef"] = from_union([lambda x: from_list(from_str, x), from_none], self.shortdef)
@@ -370,13 +492,12 @@ def lookupWord(word):
     word_url = dictionary(word)
 #    print(word_url)
     response = requests.get(word_url).text
-    print(json.loads(response))
-#    try: 
-    newWordObj = welcome_from_dict(json.loads(response))
-#    except:
-    print("the json failed")
-    
-#    return result
+    print(response)
+    try: 
+        newWordObj = welcome_from_dict(json.loads(response))
+    except:
+        print("the json failed")
+        return result
     
     
     try:
@@ -393,7 +514,8 @@ def lookupWord(word):
         
         
     try: 
-        ety = newWordObj[0].et
+        ety = newWordObj[0].et[0][1]
+        print(ety)
     except:
         ety = "unknown"
     try: 
@@ -416,9 +538,10 @@ def lookupWord(word):
         offensive = newWordObj[0].meta.offensive #response[0]['meta']['offensive']
     except:
         offensive = False
-
-    newWord = WordObj(word_id, date, short_def, pos, ety, syl, phn, offensive)
-
+    try:
+        newWord = WordObj(word_id, date, short_def, pos, ety, syl, phn, offensive)
+    except:
+        return result
     return newWord
 
 
