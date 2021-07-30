@@ -14,21 +14,24 @@
 		<link href="{{  url_for('static', filename = 'css/style.css')  }}" rel="stylesheet">
 		<script src="https://d3js.org/d3.v7.min.js"></script>
 		<script type="text/javascript" src="{{  url_for('static', filename = 'js/script.js')  }}"></script>
+		
+		<script src="{{  url_for('static', filename = 'js/bubble.js')  }}"></script>
+		
 	</head>
-	<body>
+	<body onload = "makeBubble({{  ety  }})">
 		
 		<div class="container-fluid">
 			
 			<nav>
 				<ol class="breadcrumb">
 					<li class="breadcrumb-item">
-						<a href="#">Home</a>
-					</li>
-					<li class="breadcrumb-item">
-						<a href="file:///Volumes/Ditanium%20Crystals/Boot%20Camp/Homework/project2_Words/Code/templates/word_def/definition">Definitions</a>
+						<a href="/">Home</a>
 					</li>
 					<li class="breadcrumb-item active">
-						Data
+						<a href="/">Definition</a>
+					</li>
+					<li class="breadcrumb-item">
+						Bubble
 					</li>
 				</ol>
 			</nav>
@@ -51,6 +54,10 @@
 					</div>
 					<div class="col-md-2"></div>
 					<div class="col-md-5">
+						
+						<div id="chart">
+							
+						</div>
 												
 					</div>
 				</div>
@@ -116,6 +123,8 @@
 		
 		
 		<script src="{{  url_for('static', filename = 'js/jquery.min.js')  }}"></script>
+		
+
 		<script src="{{  url_for('static', filename = 'js/bootstrap.min.js')  }}"></script>
 		<script src="{{  url_for('static', filename = 'js/scripts.js')  }}"></script>
 	</body>

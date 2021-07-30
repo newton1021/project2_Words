@@ -8,7 +8,7 @@ from sqlalchemy import create_engine, func, String, Boolean, Column
 
 from flask import Flask, jsonify, render_template, redirect, request
 from  WordPlay import addWordToDB, WordObj
-
+import re
 
 
 
@@ -96,6 +96,25 @@ def addWord(newWord):
 	# need to look up the word see if it is in the current database or else look up from MW
 	return render_template("word_def.html", word = found, words = allwords)
 # %%
+
+@app.route("/bubble")
+def makeBubble():
+	allwords = []
+	session = Session(engine)
+	allwords =   session.query(WordObj).order_by(WordObj.Word).all()
+	
+	
+	etyWords = session.query(WordObj.Etymology, func.count(WordObj.Word)).group_by(WordObj.Etymology).all()
+	
+	results = []
+	for row in etyWords:
+		if row[0] is not None:
+			if row[0] != "unknown":
+				results.append([row[0],row[1]])
+	session.close()
+	
+	return render_template("bubble.html", words = allwords, ety = results)
+
 
 
 
